@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import sys
 from geometry_msgs.msg import PoseStamped, Pose  # Add Pose here
 from nav_msgs.msg import Odometry
+from pathlib import Path
+import json
 
 from cav_for_line_follower_new import CAV
 from PID_controller_new import PID
@@ -63,6 +65,9 @@ def loadPoints(num):
     # The num input is the trial number. The trajectory will be stored in the directory
     # with this trial number.
 
+    # Get the current file's directory
+    parent_hytoperm_dir = Path(__file__).parent.parent.parent
+
     # We start with loading the trajectory from individual segments
     points_dict = {}
     uts_dict = {}
@@ -72,24 +77,25 @@ def loadPoints(num):
     # Iterate through the number number of segments
     count = 0
     while True:
-
         try:
-            # save the trajectory points
-            f = open(f'trial{num}/cycleInfo{num}_{count}_points.json', 'r')
+            # save the trajectory points, assuming trial folders are located in parent_hytoperm_directory
+            TEST = str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_points.json')
+            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_points.json'), 'r')
             points_dict[count] = json.loads(f.readline())
 
             # save the trajectory controls
-            f = open(f'trial{num}/cycleInfo{num}_{count}_cntrls.json', 'r')
+            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_cntrls.json'), 'r')
             uts_dict[count] = json.loads(f.readline())
 
             # Get the hybrid dynamics of the region
-            f = open(f'trial{num}/cycleInfo{num}_{count}_dynams.json', 'r')
+            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_dynams.json'), 'r')
             hds_dict[count] = np.array(json.loads(f.readline()))
+
             # reshape the hybrid dynamics to a 2D vector
             hds_dict[count].reshape((2, 1))
-            # Use the controls and dynamics to get the desired velocity (desired_vel = controls + hybrid_dynamics)
-            vels_dict[count] = getVels(
-                np.array(uts_dict[count]), hds_dict[count])
+            # # Use the controls and dynamics to get the desired velocity (desired_vel = controls + hybrid_dynamics)
+            # vels_dict[count] = getVels(
+            #     np.array(uts_dict[count]), hds_dict[count])
 
             count += 1
 
@@ -100,10 +106,10 @@ def loadPoints(num):
 
     # compose points and velocities into a single array
     pts = np.array(points_dict[0])
-    vels = np.array(vels_dict[0])
+    #vels = np.array(vels_dict[0])
     for count in range(tot-1):
         pts = np.hstack((pts, np.array(points_dict[count+1])))
-        vels = np.hstack((vels, np.array(vels_dict[count+1])))
+        #vels = np.hstack((vels, np.array(vels_dict[count+1])))
 
     return pts, None
 
@@ -114,7 +120,9 @@ def getJonasWaypoints(trialnum):
     #returns a Nx4 nparray of np.float values. [ [point1_x, point1_y, 0, 0],
     #                                            [point2_x, point2_y, 0, 0],
     #                                            ... and so on for N points ]
-    waypoints_all = np.hstack([points.T, np.zeros((309, 2))])   
+    points_transpose = points.T
+
+    waypoints_all = np.hstack([points.T, np.zeros((points[0].size, 2))])   
     return waypoints_all
     
 
@@ -127,8 +135,8 @@ def plotLimoPosition(waypoints):
     line, = ax.plot([], [], 'b-', marker='o', label='Limo Path')
     
     # Plot waypoints in orange
-    waypoint_x = waypoints[0, :]  # x coordinates of waypoints
-    waypoint_z = waypoints[1, :]  # z coordinates of waypoints
+    waypoint_x = waypoints[:, 0]  # x coordinates of waypoints
+    waypoint_z = waypoints[:, 1]  # z coordinates of waypoints
     ax.plot(waypoint_x, waypoint_z, 'o', color='orange', markersize=12, 
             label='Waypoints', markeredgecolor='darkorange', markeredgewidth=2)
     
@@ -279,11 +287,12 @@ def main():
             return
     startpos = [limo.position_x, limo.position_z, 0,0]
 
-    # #Get waypoints from Jonas Trajectory Files
-    # waypoints = getJonasWaypoints(num_trial=1)
-    # waypoints = waypoints.T #Shape (4,N)
+    #Get waypoints from Jonas Trajectory Files
+    num_trial = 1 #Trial_number File for trajectory
+    waypoints = getJonasWaypoints(num_trial)
 
-    
+    #Rastic Floor x:(-4500,3000) z:(-2000,3000)
+
     # Define waypoints (x, z) in mm, starting from current position
     # One waypoint = [x,y, heading_angle, angular_vel]
     # waypoints = np.array([
@@ -307,29 +316,29 @@ def main():
     #     [2100, 700, 0,0]
     # ]).T  # shape (4, N)
 
-    waypoints = np.array([
-        [limo.position_x, limo.position_z, 0, 0],  # start position
-        [-4000, 600, 0, 0],          # heading: 0° (+x direction)
-        [-3800, 600, 0, 0],          # heading: 0°
-        [-3600, 608, 0, 0],          # heading: 15°
-        [-3401, 633, 0, 0],          # heading: 30°
-        [-3205, 675, 0, 0],          # heading: 45°
-        [-3014, 733, 0, 0],          # heading: 60°
-        [-2830, 808, 0, 0],          # heading: 75°
-        [-2655, 898, 0, 0],          # heading: 90°
-        [-2490, 1003, 0, 0],         # heading: 105°
-        [-2338, 1122, 0, 0],         # heading: 120°
-        [-2199, 1254, 0, 0],         # heading: 135°
-        [-2075, 1398, 0, 0],         # heading: 150°
-        [-1967, 1553, 0, 0],         # heading: 165°
-        [-1876, 1717, 0, 0],         # heading: 180°
-        [-1803, 1891, 0, 0],         # heading: 195°
-        [-1748, 2072, 0, 0],         # heading: 210°
-        [-1713, 2259, 0, 0],         # heading: 225°
-        [-1697, 2451, 0, 0],         # heading: 240°
-        [-1701, 2646, 0, 0],         # heading: 255°
-        [-1725, 2843, 0, 0],         # heading: 270° (+y direction)
-    ]).T  # shape (4, N)
+    # waypoints = np.array([
+    #     [limo.position_x, limo.position_z, 0, 0],  # start position
+    #     [-4000, 600, 0, 0],          # heading: 0° (+x direction)
+    #     [-3800, 600, 0, 0],          # heading: 0°
+    #     [-3600, 608, 0, 0],          # heading: 15°
+    #     [-3401, 633, 0, 0],          # heading: 30°
+    #     [-3205, 675, 0, 0],          # heading: 45°
+    #     [-3014, 733, 0, 0],          # heading: 60°
+    #     [-2830, 808, 0, 0],          # heading: 75°
+    #     [-2655, 898, 0, 0],          # heading: 90°
+    #     [-2490, 1003, 0, 0],         # heading: 105°
+    #     [-2338, 1122, 0, 0],         # heading: 120°
+    #     [-2199, 1254, 0, 0],         # heading: 135°
+    #     [-2075, 1398, 0, 0],         # heading: 150°
+    #     [-1967, 1553, 0, 0],         # heading: 165°
+    #     [-1876, 1717, 0, 0],         # heading: 180°
+    #     [-1803, 1891, 0, 0],         # heading: 195°
+    #     [-1748, 2072, 0, 0],         # heading: 210°
+    #     [-1713, 2259, 0, 0],         # heading: 225°
+    #     [-1697, 2451, 0, 0],         # heading: 240°
+    #     [-1701, 2646, 0, 0],         # heading: 255°
+    #     [-1725, 2843, 0, 0],         # heading: 270° (+y direction)
+    # ]).T  # shape (4, N)
 
     # #Return to startpos
     # waypoints = np.array([

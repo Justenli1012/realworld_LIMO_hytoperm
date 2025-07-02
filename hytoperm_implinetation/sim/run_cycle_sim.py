@@ -12,17 +12,19 @@ import RUN_LIMO_sim
 from RUN_LIMO_sim import *
 from hytoperm import Experiment, Domain, extendKeywordArgs
 from LIMO_PID_sim import PID
+from pathlib import Path
 
 
 def testTraj(tracker: Tracker):
     # For a given trajectory that has been solved for, this will test it
-    points, _ = loadPoints(2, 6)
+    trialnum = 1
+    points = loadPoints(trialnum)
 
     # this sets an initial point for use in simulation.
     # on real limos, this is not needed
     tracker.x = points[:, 2:3]
 
-    # this calls the tracking controller to follow the trajectory tracks the
+    # this calls the tracking controller to followloadPoints the trajectory tracks the
     tracker.trackTrajectoryPID(points[:, 2:], stab_time=10)
 
 
@@ -82,6 +84,9 @@ def loadPoints(num):
     # The num input is the trial number. The trajectory will be stored in the directory
     # with this trial number.
 
+    # Get the current file's directory
+    parent_hytoperm_dir = Path(__file__).parent.parent.parent
+
     # We start with loading the trajectory from individual segments
     points_dict = {}
     uts_dict = {}
@@ -91,24 +96,25 @@ def loadPoints(num):
     # Iterate through the number number of segments
     count = 0
     while True:
-
         try:
-            # save the trajectory points
-            f = open(f'trial{num}/cycleInfo{num}_{count}_points.json', 'r')
+            # save the trajectory points, assuming trial folders are located in parent_hytoperm_directory
+            TEST = str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_points.json')
+            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_points.json'), 'r')
             points_dict[count] = json.loads(f.readline())
 
             # save the trajectory controls
-            f = open(f'trial{num}/cycleInfo{num}_{count}_cntrls.json', 'r')
+            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_cntrls.json'), 'r')
             uts_dict[count] = json.loads(f.readline())
 
             # Get the hybrid dynamics of the region
-            f = open(f'trial{num}/cycleInfo{num}_{count}_dynams.json', 'r')
+            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_dynams.json'), 'r')
             hds_dict[count] = np.array(json.loads(f.readline()))
+
             # reshape the hybrid dynamics to a 2D vector
             hds_dict[count].reshape((2, 1))
-            # Use the controls and dynamics to get the desired velocity (desired_vel = controls + hybrid_dynamics)
-            vels_dict[count] = getVels(
-                np.array(uts_dict[count]), hds_dict[count])
+            # # Use the controls and dynamics to get the desired velocity (desired_vel = controls + hybrid_dynamics)
+            # vels_dict[count] = getVels(
+            #     np.array(uts_dict[count]), hds_dict[count])
 
             count += 1
 
@@ -119,10 +125,10 @@ def loadPoints(num):
 
     # compose points and velocities into a single array
     pts = np.array(points_dict[0])
-    vels = np.array(vels_dict[0])
+    #vels = np.array(vels_dict[0])
     for count in range(tot-1):
         pts = np.hstack((pts, np.array(points_dict[count+1])))
-        vels = np.hstack((vels, np.array(vels_dict[count+1])))
+        #vels = np.hstack((vels, np.array(vels_dict[count+1])))
 
     return pts, None
 
@@ -178,7 +184,7 @@ def loadPoints(num):
 
     # # returned the stitched and unstitched trajectories
     # return points, points_2
-    
+
 
 #Change Rastic floor size here
 class ProblemSetup:
@@ -186,7 +192,7 @@ class ProblemSetup:
 
         # World building
         # The default domain: our RASTIC environment at BU
-        rastic = Domain(xrange=[-4.5, 4.5], yrange=[-3, 3])
+        rastic = Domain(xrange=[-4500, 3000], yrange=[-2000, 3000])
         # The domain specifications of the experiment
         self._domain: Domain = kwargs.get('domain', rastic)
         # The number of sets in the partition
@@ -199,7 +205,7 @@ class ProblemSetup:
         self._limo_name: str = "limo770"
 
         # Controller specifications
-        # The time step 
+        # The time step
         self._dt: float = kwargs.get('dt', 0.01)
         # The PID controller
         self._PID: PID = kwargs.get('pid', PID())
@@ -226,17 +232,20 @@ if __name__ == "__main__":
 
     #### IF YOU WANT TO MAKE CHANGES TO SETUP, CHANGE ps HERE ####
     # e.g., ps._dt = 0.1
- 
+
     # create new PID object to edit parameters
     ps._PID = PID(0.1, 0, 0, 0.1, 0, 0, ps._dt)
 
     # Try to load points from specified trial. If it doesn't exist, we will generate a new trial
     try:
         points, _ = loadPoints(ps._trial)
-        ex = Experiment.deserialize(f"trial{ps._trial}/Experiment.pickle")
+
+        script_dir = Path(__file__).parent.parent.parent  # Go up to parent_hytoperm_implinetation
+        trial_path_experiment_pickle = script_dir / f"trial{ps._trial}" / "Experiment.pickle"
+        ex = Experiment.deserialize(str(trial_path_experiment_pickle))
     except:
         world = test_sim.World(**ps.getKwargs())
-        world.solve()   
+        world.solve()
         world.export()
         points, _ = loadPoints(world.trial)
         ex = world.ex
