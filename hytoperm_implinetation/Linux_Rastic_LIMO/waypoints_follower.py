@@ -66,7 +66,10 @@ def loadPoints(num):
     # with this trial number.
 
     # Get the current file's directory
-    parent_hytoperm_dir = Path(__file__).parent.parent.parent
+    parent_hytoperm_dir = Path(__file__).parent.parent
+    if parent_hytoperm_dir != Path('/home/rastic/Documents/Justen_hytoperm/hytoperm_implinetation'):
+        parent_hytoperm_dir = Path('/home/rastic/Documents/Justen_hytoperm/hytoperm_implinetation')
+        print("HardCoded: Manually preSet the path of trial files")
 
     # We start with loading the trajectory from individual segments
     points_dict = {}
@@ -74,21 +77,21 @@ def loadPoints(num):
     hds_dict = {}
     vels_dict = {}
 
-    # Iterate through the number number of segments
+    # Locates the folder where the trajectory is stored "Titled Trials". Iterate through the number number of segments
     count = 0
     while True:
         try:
             # save the trajectory points, assuming trial folders are located in parent_hytoperm_directory
-            TEST = str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_points.json')
-            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_points.json'), 'r')
+            TEST = str(parent_hytoperm_dir / f'Trials' / f'trial{num}' / f'cycleInfo{num}_{count}_points.json')
+            f = open(str(parent_hytoperm_dir/ f'Trials' / f'trial{num}' / f'cycleInfo{num}_{count}_points.json'), 'r')
             points_dict[count] = json.loads(f.readline())
 
             # save the trajectory controls
-            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_cntrls.json'), 'r')
+            f = open(str(parent_hytoperm_dir / f'Trials' / f'trial{num}' / f'cycleInfo{num}_{count}_cntrls.json'), 'r')
             uts_dict[count] = json.loads(f.readline())
 
             # Get the hybrid dynamics of the region
-            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_dynams.json'), 'r')
+            f = open(str(parent_hytoperm_dir / f'Trials' / f'trial{num}' / f'cycleInfo{num}_{count}_dynams.json'), 'r')
             hds_dict[count] = np.array(json.loads(f.readline()))
 
             # reshape the hybrid dynamics to a 2D vector
@@ -117,13 +120,63 @@ def loadPoints(num):
 def getJonasWaypoints(trialnum):
     points, _ = loadPoints(trialnum) #points returns a 2xN array of np.float(values). First row is x coords, second row is y coords.
 
-    #returns a Nx4 nparray of np.float values. [ [point1_x, point1_y, 0, 0],
-    #                                            [point2_x, point2_y, 0, 0],
-    #                                            ... and so on for N points ]
+   
     points_transpose = points.T
 
     waypoints_all = np.hstack([points.T, np.zeros((points[0].size, 2))])   
-    return waypoints_all
+    #returns a Nx4 nparray of np.float values. [ [point1_x, point1_y, 0, 0], 
+    #                                            [point2_x, point2_y, 0, 0],
+    #                                            ... and so on for N points ]
+
+    x_avg = 0
+    y_avg = 0
+    for i in waypoints_all:
+        x_avg += i[0]
+        y_avg += i[1] 
+    x_avg = x_avg/len(waypoints_all)
+    y_avg = y_avg/len(waypoints_all)
+
+    scaled_waypoints = waypoints_all
+    scalar_factor = 6500
+    #Move the center of the points to the origin, and move all points to keep the same traj.
+    for i in range(len(waypoints_all)):
+        if x_avg > 0:
+            scaled_waypoints[i][0] = waypoints_all[i][0] - x_avg  #x coord values
+        if y_avg > 0:
+            scaled_waypoints[i][1] = waypoints_all[i][1] - y_avg  #y coord values
+        if x_avg < 0:
+            scaled_waypoints[i][0] = waypoints_all[i][0] + x_avg  #x coord values
+        if y_avg < 0:
+            scaled_waypoints[i][1] = waypoints_all[i][1] + y_avg  #y coord values
+    scaled_waypoints = scaled_waypoints*scalar_factor
+
+#Brings the first point to (-1000,1000) and moves other points to keep same shape trajectory. 
+#Because the x-axis are reversed, these calcs are flipped signs. 
+    first_point_x = scaled_waypoints[0][0]
+    dist_x = (-1000 - first_point_x)
+    if dist_x < 0: 
+        for i in scaled_waypoints:
+            i[0] += dist_x
+    else:
+        for i in scaled_waypoints:
+            i[0] -= dist_x
+#Y-axis calcs are normal because the y-axis is not flipped.
+    first_point_y = scaled_waypoints[0][1]
+    dist_y = (1000 - first_point_y)
+    if dist_y > 0: 
+        for i in scaled_waypoints:
+            i[1] += dist_y
+    else:
+        for i in scaled_waypoints:
+            i[1] -= dist_y
+
+    scaled_waypoints = scaled_waypoints.T        
+    #returns a 4xN nparray of np.float values. [ [point1_x, point2_x, point3_x, point4_x,  ...] and so on for N Points
+    #                                            [point1_y, point2_y, point3_y, point4_y,  ...]
+    #                                            [    0   ,      0  ,    0,         0,     ...]
+    #                                            [    0   ,      0  ,    0,         0,     ...] ]
+
+    return scaled_waypoints
     
 
 def plotLimoPosition(waypoints):
@@ -135,8 +188,8 @@ def plotLimoPosition(waypoints):
     line, = ax.plot([], [], 'b-', marker='o', label='Limo Path')
     
     # Plot waypoints in orange
-    waypoint_x = waypoints[:, 0]  # x coordinates of waypoints
-    waypoint_z = waypoints[:, 1]  # z coordinates of waypoints
+    waypoint_x = waypoints[0, :]  # x coordinates of waypoints
+    waypoint_z = waypoints[1, :]  # z coordinates of waypoints
     ax.plot(waypoint_x, waypoint_z, 'o', color='orange', markersize=12, 
             label='Waypoints', markeredgecolor='darkorange', markeredgewidth=2)
     
@@ -239,7 +292,7 @@ def plotControlSignals():
 
 
 
-offset_angle_degrees = -90+11.5
+offset_angle_degrees = 0
 def main():
     rospy.init_node("limo_waypoint_follower")
     rospy.Subscriber("/vrpn_client_node/limo780/pose", PoseStamped, pose_callback)
@@ -273,12 +326,12 @@ def main():
 
         #4-Wheel Mode (Orange-light) w/o Gaussian error for velocity slow-down (No smoothing for speed+steer) 
         steer_kp=0.4, steer_ki=0, steer_kd=0,
-        vel_kp=0.001, vel_ki=0, vel_kd=0,
+        vel_kp=0.0015, vel_ki=0, vel_kd=0,
         dt=1/30
     )
 
     dt = 1/30  # Control loop frequency = 30Hz
-    distance_threshold = 100 # mm, threshold to consider waypoint reached
+    distance_threshold = 300 # mm, threshold to consider waypoint reached
 
     # Wait for robot position data to be available
     while limo.position_x == 0 and limo.position_z == 0:
@@ -401,7 +454,7 @@ def main():
         prev_steer = 0.0       # initialize outside the loop
 
         while not rospy.is_shutdown():
-            print(f"Next waypoint: ({target_wp[0,0]:.1f}, {target_wp[1,0]:.1f})")
+            print(f"Next waypoint: Waypoint# {current_wp_idx+1} ({target_wp[0,0]:.1f}, {target_wp[1,0]:.1f})")
             heading_vector = np.array([[np.cos(current_yaw)], [-np.sin(current_yaw)]])
 
             # Update current state from limo and current yaw from callback
@@ -436,6 +489,8 @@ def main():
             # Publish commands
             drive_msg.steering_angle_velocity= smooth_steer
             drive_msg.speed = u_vel
+            #drive_msg.speed = 0.15
+
             limo.pub.publish(drive_msg)
 
             #Printing
