@@ -96,25 +96,30 @@ def loadPoints(num):
     # Iterate through the number number of segments
     count = 0
     while True:
+       
         try:
-            # save the trajectory points, assuming trial folders are located in parent_hytoperm_directory
-            TEST = str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_points.json')
-            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_points.json'), 'r')
+            # save the trajectory points
+            # Make sure it points to the right directory to find the trial files
+            # Get parent directory of current script
+            hytoperm_dir = str(Path(__file__).parent.parent)
+
+            f = open(f'{hytoperm_dir}/trial{num}/cycleInfo{num}_{count}_points.json', 'r')
             points_dict[count] = json.loads(f.readline())
 
             # save the trajectory controls
-            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_cntrls.json'), 'r')
-            uts_dict[count] = json.loads(f.readline())
+            f = open(f'{hytoperm_dir}/trial{num}/cycleInfo{num}_{count}_cntrls.json', 'r')
+            content = f.read().replace('NaN', 'null')
+            uts_dict[count] = json.loads(content)
 
             # Get the hybrid dynamics of the region
-            f = open(str(parent_hytoperm_dir / f'trial{num}' / f'cycleInfo{num}_{count}_dynams.json'), 'r')
+            f = open(f'{hytoperm_dir}/trial{num}/cycleInfo{num}_{count}_dynams.json', 'r')
             hds_dict[count] = np.array(json.loads(f.readline()))
 
             # reshape the hybrid dynamics to a 2D vector
             hds_dict[count].reshape((2, 1))
-            # # Use the controls and dynamics to get the desired velocity (desired_vel = controls + hybrid_dynamics)
-            # vels_dict[count] = getVels(
-            #     np.array(uts_dict[count]), hds_dict[count])
+            # Use the controls and dynamics to get the desired velocity
+            vels_dict[count] = getVels(
+                np.array(uts_dict[count], dtype = float), hds_dict[count])
 
             count += 1
 
@@ -227,32 +232,115 @@ class ProblemSetup:
 
 if __name__ == "__main__":
 
+
     # Specify everything about the experiment
     ps = ProblemSetup()
 
+
     #### IF YOU WANT TO MAKE CHANGES TO SETUP, CHANGE ps HERE ####
     # e.g., ps._dt = 0.1
-
+ 
     # create new PID object to edit parameters
     ps._PID = PID(0.1, 0, 0, 0.1, 0, 0, ps._dt)
+
+
+    #Change trial number, set a new trial number that does not exist to generate a new trial.
+    ps._trial = 48
+
 
     # Try to load points from specified trial. If it doesn't exist, we will generate a new trial
     try:
         points, _ = loadPoints(ps._trial)
-
-        script_dir = Path(__file__).parent.parent.parent  # Go up to parent_hytoperm_implinetation
-        trial_path_experiment_pickle = script_dir / f"trial{ps._trial}" / "Experiment.pickle"
-        ex = Experiment.deserialize(str(trial_path_experiment_pickle))
+        ex = Experiment.deserialize(f"trial{ps._trial}/Experiment.pickle") #Check if trial folder contains 'Experiment.pickle' file
     except:
-        world = test_sim.World(**ps.getKwargs())
-        world.solve()
+        # ADD THESE LINES TO CHANGE TARGETS:
+        ps._nsets = 5         # Change number of regions (more regions = more potential target locations) #original: 15
+        ps._fraction = 0.5    # Change fraction of regions with targets (0.5 = 50% of regions will have targets) #original 0.2
+
+
+        #Change domain/world dimensions
+        kwargs = ps.getKwargs()
+        kwargs['domain'] = Domain(xrange=[0, 2], yrange=[0, 2])  # Domain has to be positive values, can't be negative values
+       
+        world = test_sim.World(**kwargs)
+        world.solve()  
         world.export()
         points, _ = loadPoints(world.trial)
         ex = world.ex
 
+
     # When creating the tracker specify which limo you are using
     tracker = Tracker(**ps.getKwargs())
+
 
     # this calls the tracking controller to follow the trajectory
     data = tracker.trackTrajectoryPID(points[:, :])
     plotCyclesim(data, ex=ex)
+
+
+# if __name__ == "__main__":
+
+
+#     # Specify everything about the experiment
+#     ps = ProblemSetup()
+
+
+#     #### IF YOU WANT TO MAKE CHANGES TO SETUP, CHANGE ps HERE ####
+#     # e.g., ps._dt = 0.1
+ 
+#     # create new PID object to edit parameters
+#     ps._PID = PID(0.1, 0, 0, 0.1, 0, 0, ps._dt)
+
+
+#     # ADD THESE LINES TO CHANGE TARGETS:
+#     ps._nsets = 4        # Change number of regions (more regions = more potential target locations) #original: 15
+#     ps._fraction = 0.2      # Change fraction of regions with targets (0.5 = 50% of regions will have targets) #original 0.2
+#     ps._trial = 100
+
+
+#     # Try to load points from specified trial. If it doesn't exist, we will generate a new trial
+#     try:
+#         points, _ = loadPoints(ps._trial)
+#         ex = Experiment.deserialize(f"trial{ps._trial}/Experiment.pickle")
+#         num_targets = len(ex.world().targets())
+#         print(f"✓ Loaded existing world with {num_targets} targets")
+#     except:
+#         print(f"Creating new world with {ps._nsets} regions and {ps._fraction} fraction targets...")
+
+
+#         # Get base kwargs and add extra parameters that help with partitioning
+#         kwargs = ps.getKwargs()
+#         kwargs['seed'] = 42
+#         kwargs['min_dist'] = 0.0001        # LARGER min_dist helps partitioning #Original 0.005
+#         kwargs['n_obstacles'] = 0       # No obstacles to avoid partitioning issues
+#         # kwargs['domain'] = Domain(xrange=[-2, 2], yrange=[-2, 2])  # Smaller domain
+#         kwargs['domain'] = Domain(xrange=[-1.5, 1.5], yrange=[-1.5, 1.5])
+
+
+#         world = test_sim.World(**kwargs)
+#         if world.ex is None:
+#             print("Generation failed. Try smaller parameters.")
+#             exit()
+           
+#         num_targets = len(world.ex.world().targets())
+#         print(f"✓ Created world with {num_targets} targets")
+
+
+#         print(f"Solving optimization for trial {world.trial}...")
+#         world.solve()  
+#         world.export()
+#         points, _ = loadPoints(world.trial)
+#         ex = world.ex
+       
+
+
+#     # When creating the tracker specify which limo you are using
+#     tracker = Tracker(**ps.getKwargs())
+
+
+#     # this calls the tracking controller to follow the trajectory
+#     data = tracker.trackTrajectoryPID(points[:, :])
+#     plotCyclesim(data, ex=ex)
+#     print(f"Done! World data in trial{ps._trial if 'ex' in locals() and ex is not None else world.trial}")
+
+

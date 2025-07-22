@@ -70,9 +70,15 @@ class World:
         zeroRegions(self.ex.world() )
         
     def getTrial(self, trial):
+        #If a trial number is specified and the directory exists, uses that number instead of making a new directory.
         if trial is not None:
-            return trial
-        
+            if os.path.isdir(f'trial{trial}'): #Checks if trial directory exists
+                return trial
+            else: #False: trial directory doesn't exist
+                os.mkdir(f'trial{trial}') #Create directory
+                return trial
+
+        #If no trial_num specified and desire world generation. Creates a new trial at the next available trial number possible.
         trial = 1
         # create a new directory to store trajectories
         fin = False
@@ -80,8 +86,9 @@ class World:
             if os.path.isdir(f'trial{trial}'):
                 trial += 1
             else:
-                os.mkdir(f'trial{trial}')
+                os.mkdir(f'trial{trial}') #Create directory
                 return trial
+
 
 
     def solve(self, **kwargs):
