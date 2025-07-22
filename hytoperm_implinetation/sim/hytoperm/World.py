@@ -366,6 +366,7 @@ class CPRegion(Region):
         for i in self.g().keys():
             g = self.g()[i]
             b = self.b()[i]
+            a = np.dot(g, x)
             if np.dot(g, x) > b + tol:
                 return False
         return True

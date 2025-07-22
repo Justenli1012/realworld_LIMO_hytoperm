@@ -192,7 +192,7 @@ class ProblemSetup:
 
         # World building
         # The default domain: our RASTIC environment at BU
-        rastic = Domain(xrange=[-4500, 3000], yrange=[-2000, 3000])
+        rastic = Domain(xrange=[-4500,3000], yrange=[-2000, 3000])
         # The domain specifications of the experiment
         self._domain: Domain = kwargs.get('domain', rastic)
         # The number of sets in the partition
