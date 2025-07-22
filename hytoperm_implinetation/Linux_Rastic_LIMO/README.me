@@ -1,5 +1,5 @@
-This repository is used to implement and run the Hytoperm Implinetation Code On the AgileX LIMO Robots found in Boston University's Rastic.
-This repository is created by Justen Li, with the original Hytoperm Implinetation Code developed by Jonas Hall and Carter, under Professor Sean Andersson. 
+This repository is used to implement and run the Hytoperm implinetation Code On the AgileX LIMO Robots found in Boston University's Rastic.
+This repository is created by Justen Li, with the original Hytoperm implinetation Code developed by Jonas Hall and Carter, under Professor Sean Andersson. 
 
 
 Originally this code was ran on the "rastic-linux-laptop" found in Rastic, which uses linux and ROS noetic. The LIMO's use ROS melodic.
@@ -44,5 +44,13 @@ There are few steps that need to be completed before running this code:
 
     9. With all the points loaded, distance_threshold, and PID gains set, and everything else set up properly. 
        The code should work properly now for the LIMO to track points and traverse through the environemnt. 
+
+
+To run hytoperm_impinetation generated waypoints code, take the following steps:
+    1. Create a new folder and name it anything. Move /hytoperm_implinetation/ into this folder. Ex: /NewFolder/hytoperm_implinetation/sim/...
+    1. In Terminal, navigate to /NewFolder/ so you are in this current directory
+    2. Now in Vscode, Go to /hytoperm_implinetation/sim/run_cycle_sim.py
+    3. Adjust the trial number to one that does not exist in the 'NewFolder' to generate a new Trial, Change ps._nsets for # of regions, ps._fraction for # of targets
+    4. Run run_cycle_sim.py to generate the new trial file, or set the trial number to an already existing one to view a older trial with its old trajectory. 
    
     
