@@ -2,11 +2,13 @@
 
 Real-world deployment of **trajectory optimization and closed-loop trajectory tracking** on an AgileX LIMO mobile robot using **ROS1, OptiTrack, Python, and PID control**.
 
-This project investigates the transition from simulation-based trajectory optimization to physical robot deployment, with a focus on **real-time trajectory tracking, feedback control, and sim-to-real validation**.
+This research was conducted at **Boston University under the supervision of Principal Investigator Professor Sean Andersson**.
 
-The project builds upon a **Persistent Monitoring** framework developed by Jonas Hall, Ph.D., at Boston University. The framework generates optimized trajectories for an autonomous agent to repeatedly monitor multiple targets while minimizing accumulated uncertainty over time. This approach is applicable to scenarios where autonomous robots must continuously observe areas or targets of interest, including **disaster-response environments such as forest fires, earthquakes, and other large-scale emergencies**.
+The project investigates the transition from simulation-based trajectory optimization to physical robot deployment, with a focus on **real-time trajectory tracking, feedback control, and sim-to-real validation**.
 
-The primary focus of this work was to **deploy the optimized trajectories on a physical AgileX LIMO, develop a closed-loop tracking system, and evaluate the differences between simulated and real-world trajectory execution**.
+The project builds upon a **Persistent Monitoring** framework developed by **Jonas Hall, a Ph.D. student at Boston University**. The framework generates optimized trajectories for an autonomous agent to repeatedly monitor multiple targets while minimizing accumulated uncertainty over time. This approach is applicable to scenarios where autonomous robots must continuously observe areas or targets of interest, including **disaster-response environments such as forest fires, earthquakes, and other large-scale emergencies**.
+
+My primary contribution focused on **deploying the optimized trajectories on a physical AgileX LIMO, developing and tuning a closed-loop trajectory-tracking controller, integrating real-time OptiTrack pose feedback, and analyzing differences between simulated and real-world trajectory execution**.
 
 ---
 
