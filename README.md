@@ -1,119 +1,171 @@
-# realworld_LIMO_hytoperm
-Applying Jonas Hytoperm sim code to real-world physical LIMO robot
-Go to "master" branch
-
 # 🤖 Real-World Trajectory Optimization & Tracking
 
-Real-world deployment of trajectory optimization and tracking algorithms on an
-**AgileX LIMO mobile robot** using **Python, ROS1, OptiTrack, and PID control**.
+Real-world deployment of trajectory optimization and closed-loop trajectory tracking on an **AgileX LIMO mobile robot** using **ROS1, OptiTrack, Python, and PID control**.
 
-The project extends simulation-based trajectory optimization to a physical robotic
-platform, investigating the challenges of real-time trajectory execution,
-controller performance, and sim-to-real model mismatch.
+This project investigates the transition from simulation-based trajectory optimization to physical robot deployment, with a focus on **trajectory tracking, real-time feedback, and sim-to-real performance**.
+
+---
 
 ## 🛠️ Technologies
 
-- Python
-- ROS1 / ROS Noetic
-- OptiTrack Motion Capture
-- PID Control
-- Trajectory Optimization
-- NumPy
-- Matplotlib
-- Linux / Ubuntu
+`Python` `ROS1` `ROS Noetic` `PID Control` `OptiTrack` `Trajectory Optimization` `NumPy` `Matplotlib` `Ubuntu`
 
-## 🚀 Key Features
+---
 
-- Executes optimized trajectories on a physical AgileX LIMO robot
-- Uses real-time OptiTrack pose feedback for closed-loop control
-- Implements dual PID control for trajectory tracking
-- Compares planned trajectories against real-world robot motion
-- Analyzes sim-to-real trajectory deviation and model mismatch
+## 🎯 Project Overview
 
-## ⚙️ System Overview
+The system generates optimized reference trajectories and executes them on a physical **AgileX LIMO** mobile robot.
 
-The trajectory optimizer generates a time-dependent reference trajectory for the
-robot to follow.
+Real-time pose measurements from an **OptiTrack motion-capture system** provide feedback to a dual-PID controller responsible for controlling the robot's motion along the reference trajectory.
 
-During physical execution, OptiTrack provides real-time global pose measurements.
-The tracking controller compares the robot's current state with the reference
-trajectory and generates velocity and steering commands for the LIMO through ROS.
+The project was used to investigate differences between theoretically optimized trajectories and real-world execution, including the effects of model mismatch, physical constraints, and system latency.
 
-The overall pipeline is:
+### Control Pipeline
 
-**Trajectory Optimization → Reference Trajectory → PID Tracking → ROS Commands → LIMO**
+```text
+Trajectory Optimization
+        ↓
+Reference Trajectory
+        ↓
+Dual PID Controller
+        ↓
+ROS Velocity Commands
+        ↓
+AgileX LIMO
+        ↓
+Physical Motion
+        ↓
+OptiTrack Pose Feedback
+        └──────────────→ Tracking Error → PID Controller
+```
 
-**LIMO → OptiTrack Pose Feedback → Tracking Error → PID Controller**
+---
 
-## 🎯 Control & Trajectory Tracking
+## 📊 Experimental Results
 
-A dual-PID control architecture is used to track the optimized trajectory.
+### Optimized Trajectory & Robot Path
 
-The controller continuously evaluates the difference between the desired trajectory
-and the measured robot pose, using this feedback to update the robot's motion
-commands.
+The reference trajectory and robot motion can be visualized in the experiment world view.
 
-This allowed the optimized trajectories developed in simulation to be evaluated
-on a physical robotic platform.
+![Trial 2 World Trajectory](assets/images/trial2_world.png)
 
-## 📊 Results
+### Trajectory Tracking Performance
 
-- Achieved **92% of theoretical optimal path efficiency** during physical trajectory tracking
-- Identified approximately **8% sim-to-real trajectory deviation**
-- Observed increased tracking error during sharp turns and higher-speed trajectory segments
-- Identified model mismatch between the trajectory model and the LIMO's physical motion constraints as a major source of error
+Tracking data from the physical experiment was analyzed to compare the desired trajectory against the robot's actual response.
 
-These experiments highlight the importance of incorporating realistic vehicle
-dynamics when transferring trajectory optimization algorithms from simulation
-to physical robots.
+![Trial 2 Tracking Graphs](assets/images/trial2_graphs.png)
 
-## 🔬 What I Learned
+The experiments achieved approximately **92% theoretical optimal-path efficiency**, while analysis identified approximately **8% sim-to-real trajectory deviation**.
+
+A major source of tracking error was the difference between the idealized trajectory model used during optimization and the physical car-like dynamics of the LIMO platform.
+
+---
+
+## 🎥 Physical Robot Demonstration
+
+### Trajectory Tracking Experiment
+
+This experiment shows the AgileX LIMO executing the optimized trajectory using real-time feedback control.
+
+https://github.com/user-attachments/assets/REPLACE_WITH_VIDEO_LINK
+
+> `assets/videos/trial2_run.mp4`
+
+### Real-Time Robot Position Tracking
+
+The following demonstration shows the robot's position being updated during physical execution using OptiTrack feedback.
+
+https://github.com/user-attachments/assets/REPLACE_WITH_VIDEO_LINK
+
+> `assets/videos/live_robot_position.mp4`
+
+---
+
+## 🖥️ Simulation
+
+The trajectory optimization and tracking algorithms were first evaluated in simulation before deployment onto the physical robot.
+
+![Simulation](assets/images/simulation_zoomed.png)
+
+Simulation provided a controlled environment for evaluating trajectories and controller behavior before conducting physical experiments.
+
+---
+
+## 🔬 Sim-to-Real Analysis
+
+Physical deployment revealed several differences that were not fully represented by the simulation model.
+
+Key sources of deviation included:
+
+- Robot kinematic and dynamic constraints
+- Model mismatch between the trajectory optimizer and physical LIMO
+- Steering limitations during sharp turns
+- Higher tracking error during high-speed trajectory segments
+- Communication and control-loop latency
+
+These results demonstrate the importance of incorporating realistic vehicle dynamics when transferring trajectory optimization algorithms from simulation to physical robotic systems.
+
+---
+
+## 🧠 Key Takeaways
 
 This project provided hands-on experience with:
 
-- Real-time robotic control
+- Trajectory optimization
+- Closed-loop trajectory tracking
 - PID controller development and tuning
-- Trajectory optimization and tracking
 - ROS-based robot communication
-- Motion-capture feedback
+- OptiTrack motion capture
+- Real-time pose feedback
 - Experimental robotics
 - Sim-to-real validation
-- Debugging physical autonomous systems
+- Robot data analysis and visualization
 
-One of the biggest lessons was that a trajectory that performs well in simulation
-does not necessarily transfer directly to a physical robot. Vehicle dynamics,
-latency, actuator limitations, and modeling assumptions all influence real-world
-tracking performance.
+---
 
-## 💻 Running the Project
+## 🚀 Future Work
 
-### Requirements
+Future improvements include:
 
-- Ubuntu 20.04
-- ROS Noetic
-- Python 3
-- AgileX LIMO
-- OptiTrack motion-capture system
+- Developing a trajectory model that more accurately represents the LIMO's car-like dynamics
+- Exploring more advanced trajectory-tracking controllers
+- Improving tracking through sharp turns and high-speed segments
+- Further analyzing sim-to-real performance
+- Evaluating additional optimized trajectories and operating conditions
 
-### Setup
+---
 
-Clone the repository:
+## ⚙️ Setup & Running the Project
 
-    git clone <repository-url>
+For installation, ROS configuration, dependencies, and instructions for running the project, see:
 
-Additional setup instructions for the LIMO, ROS environment, and OptiTrack
-configuration will be documented here.
+**[Setup Guide](SETUP.md)**
 
-## 🎥 Demo
+---
 
-<!-- Add GIF/video of LIMO following an optimized trajectory here -->
+## 📁 Repository Structure
 
-Coming soon.
+```text
+realworld_LIMO_hytoperm/
+├── README.md
+├── SETUP.md
+├── assets/
+│   ├── images/
+│   │   ├── trial2_world.png
+│   │   ├── trial2_graphs.png
+│   │   └── simulation_zoomed.png
+│   └── videos/
+│       ├── trial2_run.mp4
+│       └── live_robot_position.mp4
+├── hytoperm_implinetation/
+├── limo_tutorial/
+└── vrpn_client_ros/
+```
 
-## 🔮 Future Work
+---
 
-- Improve the vehicle model to better represent LIMO dynamics
-- Implement more advanced trajectory-tracking controllers
-- Improve performance through sharp turns and high-speed segments
-- Further investigate sim-to-real differences
-- Evaluate additional trajectory optimization and control methods
+## 👤 Author
+
+**Justen Li**  
+Robotics MSE — Johns Hopkins University  
+B.S. Mechanical Engineering, Robotics Concentration — Boston University
