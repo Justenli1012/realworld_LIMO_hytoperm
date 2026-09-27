@@ -1,0 +1,48 @@
+This repository is used to implement and run the Hytoperm Implinetation Code On the AgileX LIMO Robots found in Boston University's Rastic.
+This repository is created by Justen Li, with the original Hytoperm Implinetation Code developed by Jonas Hall and Carter, under Professor Sean Andersson. 
+
+
+Originally this code was ran on the "rastic-linux-laptop" found in Rastic, which uses linux and ROS noetic. The LIMO's use ROS melodic.
+Some adjustments may be needed if another computer is used as the master pc. 
+
+There are few steps that need to be completed before running this code:
+
+    1. The two main folders are limo_tutorial and vrpn_client_ros. Make sure you have the two folders downloaded and placed in a folder called src, or just download the entire src folder.
+    
+    2. Follow these steps to connect to the LIMO and Motion Capture OptiTrack System (Mocap).
+        a. https://docs.google.com/document/d/1pgCAJMygZeiAV6sgPwOCfiZDVfscDZRdLQ24VP0GoCE/edit?usp=sharing
+        b. Make sure the OptiTrack System is turned on using the white Button switch, and opening the "Motive" App.
+        c. These files use "limo780 but as long as you keep the name consistent, you can switch limos. 
+
+    3. Make sure in the Mocap terminal, after "Connection Established", it also says "tracking limo780" or something similar.  
+        a. If this doesn't happen and errors occur, make sure the master pc, Mocap, limo are on the same wifi ("rastic"), restart the Motive app, 
+            also remake the rigid body for the lim780 and rename it as well.
+        b. To make a rigid body, left click+drag to select the set of points that make the body, right click, select "Create Rigid Body".
+            On the Right side, go to the assets tab on top. Select limo780, then go to the bottom right of the screen to select the name and change it to "limo780".
+            Also, confirm the StreamingID is not the same as any other rigidbody. 
+
+    3. Turn the LIMO on by holding the side metal button down. 
+        Set the LIMO to 4-wheel DIfferential Drive Mode
+        a. Near the front wheels, there are two red knobs. Pull them up and turn ~30 degrees and release. 
+           Both lights should turn from green to Orange Color. This Orange color indicates 4-wheel DIfferential Drive Mode. 
+           
+    4. SSH into the LIMO and run set the of commands 
+        a. Make sure you copy the listener/limo_cmd_listen2.py file onto the LIMO 
+        b. Exit ssh, navigate to the listener folder, and use the command: scp limo_cmd_listener2.py agilex@LIMO_IP:~/Desktop/rastic_tutorial_ws/src/listener
+
+    5. Run the 3rd set of commands for ./waypoints_follower.py by navigating to the current directory/folder in the terminal.
+
+    6. Make sure you have all the neccessary packages and libraries downloaded, and also have your Python + ROS environment setup correctly. \
+       This may require some additional outside research.
+
+    7. Use vscode to edit the waypoints_follower.py file. 
+        a. In main(), adjust the waypoints[], distance_threshold, PID controllers gains.  
+
+    8. After running ./waypoints_follower.py, check to see the red arrow aligns with the heading direction of the physical LIMO. 
+       a. Note the coordinate system of Rastic Arena Floor (Toward the Door/hallway is +X, Away from the window is +Z, Height is +Y)
+       b. If its misaligned, look at the "current_yaw" output value in terminal to see the amount of offset. Then above the main() change the "offset_angle_degrees" value.
+
+    9. With all the points loaded, distance_threshold, and PID gains set, and everything else set up properly. 
+       The code should work properly now for the LIMO to track points and traverse through the environemnt. 
+   
+    
