@@ -78,7 +78,9 @@ A major source of this deviation was the difference between the idealized model 
 
 The following experiment shows the AgileX LIMO executing an optimized trajectory using closed-loop PID control and real-time OptiTrack feedback.
 
-https://github.com/user-attachments/assets/d512fcbf-117b-4ab7-84f9-2659e24d4649
+
+https://github.com/user-attachments/assets/5f85ac17-74d1-49ec-a623-80eeed8c4363
+
 
 ### Real-Time Robot Position Tracking
 
