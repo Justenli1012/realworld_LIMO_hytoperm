@@ -78,13 +78,13 @@ A major source of this deviation was the difference between the idealized model 
 
 The following experiment shows the AgileX LIMO executing an optimized trajectory using closed-loop PID control and real-time OptiTrack feedback.
 
-▶️ **[Watch the Trial 2 trajectory tracking demonstration](assets/videos/trial2_run.mp4)**
+https://github.com/user-attachments/assets/d512fcbf-117b-4ab7-84f9-2659e24d4649
 
 ### Real-Time Robot Position Tracking
 
 OptiTrack measurements are used to continuously update the estimated position of the physical robot during trajectory execution.
 
-▶️ **[Watch the real-time robot position demonstration](assets/videos/live_robot_position.mp4)**
+https://github.com/user-attachments/assets/c896f0bf-b022-49e9-b4f5-d4e4f733d3d9
 
 ---
 
